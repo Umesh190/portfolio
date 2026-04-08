@@ -493,235 +493,6 @@
             );
         };
 
-        // --- CYBER SECURITY DATA CARD COMPONENT ---
-        const CipherTerminal = () => {
-            const [mode, setMode] = useState('encrypt');
-            const [algo, setAlgo] = useState('base64');
-            const [key, setKey] = useState('3');
-            const [inputText, setInputText] = useState('');
-            const [outputText, setOutputText] = useState('_');
-            const [hasError, setHasError] = useState(false);
-
-            const algoDescriptions = {
-                base64:  'Encodes data using Base64 — safe for transmission over text channels. No key required.',
-                hex:     'Converts each character to its hexadecimal ASCII code. No key required.',
-                rot13:   'Substitutes each letter with the one 13 positions ahead. Symmetric — decrypt = encrypt.',
-                caesar:  'Classic shift cipher. Enter a numeric shift value (1–25) as the key.',
-                xor:     'XOR each character\'s code against the key string, cycling as needed.',
-                atbash:  'Reverses the alphabet: A↔Z, B↔Y, etc. No key required.',
-                url:     'Percent-encodes special characters for safe use in URLs. No key required.',
-                binary:  'Converts each character to its 8-bit binary representation. No key required.',
-                reverse: 'Reverses the entire string. No key required.'
-            };
-
-            const keyAlgos = ['caesar', 'xor'];
-            const needsKey = keyAlgos.includes(algo);
-
-            // Cipher Logic
-            const toBase64 = (s) => btoa(unescape(encodeURIComponent(s)));
-            const fromBase64 = (s) => { try { return decodeURIComponent(escape(atob(s.trim()))); } catch { throw new Error('Invalid Base64'); } };
-            const toHex = (s) => Array.from(s).map(c => c.charCodeAt(0).toString(16).padStart(2,'0')).join(' ');
-            const fromHex = (s) => { try { return s.trim().split(/\s+/).map(h => String.fromCharCode(parseInt(h,16))).join(''); } catch { throw new Error('Invalid Hex'); } };
-            const rot13 = (s) => s.replace(/[a-zA-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + (c.toLowerCase() < 'n' ? 13 : -13)));
-            const caesarEnc = (s, shift) => {
-                shift = ((parseInt(shift) || 3) % 26 + 26) % 26;
-                return s.replace(/[a-zA-Z]/g, c => {
-                    const b = c <= 'Z' ? 65 : 97;
-                    return String.fromCharCode((c.charCodeAt(0) - b + shift) % 26 + b);
-                });
-            };
-            const caesarDec = (s, shift) => caesarEnc(s, 26 - ((parseInt(shift) || 3) % 26 + 26) % 26);
-            const xorBytes = (s, keyStr) => {
-                if (!keyStr) throw new Error('XOR requires a key');
-                return Array.from(s).map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ keyStr.charCodeAt(i % keyStr.length))).join('');
-            };
-            const xorToHex = (s, keyStr) => Array.from(xorBytes(s,keyStr)).map(c=>c.charCodeAt(0).toString(16).padStart(2,'0')).join(' ');
-            const xorFromHex = (s, keyStr) => { const raw = s.trim().split(/\s+/).map(h=>String.fromCharCode(parseInt(h,16))).join(''); return xorBytes(raw, keyStr); };
-            const atbash = (s) => s.replace(/[a-zA-Z]/g, c => {
-                const b = c <= 'Z' ? 65 : 97;
-                return String.fromCharCode(b + 25 - (c.charCodeAt(0) - b));
-            });
-            const toBinary = (s) => Array.from(s).map(c=>c.charCodeAt(0).toString(2).padStart(8,'0')).join(' ');
-            const fromBinary = (s) => { try { return s.trim().split(/\s+/).map(b=>String.fromCharCode(parseInt(b,2))).join(''); } catch { throw new Error('Invalid Binary'); } };
-
-            const processData = () => {
-                if (!inputText.trim()) {
-                    setOutputText('ERROR: No input provided.');
-                    setHasError(true);
-                    return;
-                }
-                setHasError(false);
-                try {
-                    let result = '';
-                    if (mode === 'encrypt') {
-                        if (algo === 'base64') result = toBase64(inputText);
-                        else if (algo === 'hex') result = toHex(inputText);
-                        else if (algo === 'rot13') result = rot13(inputText);
-                        else if (algo === 'caesar') result = caesarEnc(inputText, key);
-                        else if (algo === 'xor') result = xorToHex(inputText, key);
-                        else if (algo === 'atbash') result = atbash(inputText);
-                        else if (algo === 'url') result = encodeURIComponent(inputText);
-                        else if (algo === 'binary') result = toBinary(inputText);
-                        else if (algo === 'reverse') result = inputText.split('').reverse().join('');
-                    } else {
-                        if (algo === 'base64') result = fromBase64(inputText);
-                        else if (algo === 'hex') result = fromHex(inputText);
-                        else if (algo === 'rot13') result = rot13(inputText);
-                        else if (algo === 'caesar') result = caesarDec(inputText, key);
-                        else if (algo === 'xor') result = xorFromHex(inputText, key);
-                        else if (algo === 'atbash') result = atbash(inputText);
-                        else if (algo === 'url') result = decodeURIComponent(inputText);
-                        else if (algo === 'binary') result = fromBinary(inputText);
-                        else if (algo === 'reverse') result = inputText.split('').reverse().join('');
-                    }
-                    setOutputText(result);
-                } catch (e) {
-                    setOutputText('ERROR: ' + e.message);
-                    setHasError(true);
-                }
-            };
-
-            const swapIO = () => {
-                if (!outputText || outputText === '_' || hasError) return;
-                setInputText(outputText);
-                setOutputText('_');
-                setMode(mode === 'encrypt' ? 'decrypt' : 'encrypt');
-            };
-
-            const copyOutput = () => {
-                if (outputText && outputText !== '_') {
-                    navigator.clipboard.writeText(outputText).catch(() => {});
-                }
-            };
-
-            useEffect(() => {
-                if (algo === 'caesar' && !key) setKey('3');
-                if (algo === 'xor' && key === '3') setKey('');
-            }, [algo]);
-
-            return (
-                <div className="w-full flex flex-col rounded-2xl border border-brand-cyan/30 bg-slate-900/80 backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.1),inset_0_0_20px_rgba(0,0,0,0.5)] overflow-hidden font-mono">
-                    {/* Header */}
-                    <div className="flex justify-between items-center bg-slate-950/60 px-4 py-3 border-b border-brand-cyan/20">
-                        <div className="text-brand-cyan text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                            <LucideIcon name="Terminal" size={16} />
-                            <span>CIPHER_TERMINAL</span>
-                        </div>
-                        <div className="flex gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
-                        </div>
-                    </div>
-
-                    <div className="p-6 flex flex-col gap-5">
-                        {/* Tabs */}
-                        <div className="flex border border-brand-cyan/20 rounded-md overflow-hidden bg-slate-950/40">
-                            <button 
-                                onClick={() => { setMode('encrypt'); setOutputText('_'); }} 
-                                className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${mode === 'encrypt' ? 'bg-brand-cyan text-slate-950' : 'text-slate-400 hover:bg-brand-cyan/10 hover:text-brand-cyan'}`}
-                            >
-                                <LucideIcon name="Lock" size={14} /> ENCRYPT
-                            </button>
-                            <button 
-                                onClick={() => { setMode('decrypt'); setOutputText('_'); }} 
-                                className={`flex-1 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2 ${mode === 'decrypt' ? 'bg-brand-cyan text-slate-950' : 'text-slate-400 hover:bg-brand-cyan/10 hover:text-brand-cyan'}`}
-                            >
-                                <LucideIcon name="Unlock" size={14} /> DECRYPT
-                            </button>
-                        </div>
-
-                        {/* Algorithm + Key */}
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1 flex flex-col gap-1.5">
-                                <label className="text-[0.7rem] uppercase tracking-widest text-brand-cyan/80 font-bold">Algorithm</label>
-                                <select 
-                                    value={algo} 
-                                    onChange={(e) => setAlgo(e.target.value)} 
-                                    className="w-full bg-slate-950/60 border border-brand-cyan/20 text-slate-200 text-sm p-2.5 outline-none focus:border-brand-cyan focus:shadow-[0_0_8px_rgba(6,182,212,0.3)] transition-all rounded"
-                                >
-                                    <option value="base64">Base64</option>
-                                    <option value="hex">Hex</option>
-                                    <option value="rot13">ROT-13</option>
-                                    <option value="caesar">Caesar Cipher</option>
-                                    <option value="xor">XOR Cipher</option>
-                                    <option value="atbash">Atbash</option>
-                                    <option value="url">URL Encoding</option>
-                                    <option value="binary">Binary</option>
-                                    <option value="reverse">Reverse</option>
-                                </select>
-                            </div>
-                            {needsKey && (
-                                <div className="flex-1 flex flex-col gap-1.5">
-                                    <label className="text-[0.7rem] uppercase tracking-widest text-brand-cyan/80 font-bold">
-                                        {algo === 'caesar' ? 'Shift (1-25)' : 'XOR Key'}
-                                    </label>
-                                    <input 
-                                        type="text" 
-                                        value={key} 
-                                        onChange={(e) => setKey(e.target.value)} 
-                                        placeholder={algo === 'caesar' ? '3' : 'secret'}
-                                        className="w-full bg-slate-950/60 border border-brand-cyan/20 text-slate-200 text-sm p-2.5 outline-none focus:border-brand-cyan focus:shadow-[0_0_8px_rgba(6,182,212,0.3)] transition-all rounded" 
-                                    />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="text-[0.7rem] text-slate-400 leading-relaxed border-l-2 border-brand-cyan/30 pl-3">
-                            {algoDescriptions[algo]}
-                        </div>
-
-                        {/* Input Area */}
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-[0.7rem] uppercase tracking-widest text-brand-cyan/80 font-bold">
-                                {mode === 'encrypt' ? 'PLAINTEXT INPUT' : 'CIPHERTEXT INPUT'}
-                            </label>
-                            <textarea 
-                                value={inputText}
-                                onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Type or paste your message here..."
-                                className="w-full min-h-[90px] resize-y bg-slate-950/60 border border-brand-cyan/20 text-slate-200 text-sm p-3 outline-none focus:border-brand-cyan focus:shadow-[0_0_8px_rgba(6,182,212,0.3)] transition-all rounded"
-                            ></textarea>
-                        </div>
-
-                        {/* Swap Button */}
-                        <button onClick={swapIO} className="self-end mt-[-10px] text-[0.65rem] border border-brand-cyan/20 text-brand-cyan py-1 px-3 rounded hover:bg-brand-cyan/10 hover:border-brand-cyan transition-colors flex items-center gap-1">
-                            <LucideIcon name="ArrowUpDown" size={12} /> SWAP I/O
-                        </button>
-
-                        {/* Action Button */}
-                        <button onClick={processData} className="w-full py-3.5 bg-transparent border-2 border-brand-cyan text-brand-cyan font-bold text-sm tracking-[0.2em] uppercase rounded hover:bg-brand-cyan hover:text-slate-950 hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] transition-all active:scale-[0.98]">
-                            {mode === 'encrypt' ? 'ENCRYPT_DATA' : 'DECRYPT_DATA'}
-                        </button>
-
-                        {/* Output */}
-                        <div>
-                            <div className="flex justify-between items-center mb-1.5 text-[0.7rem] uppercase tracking-widest text-slate-400 font-bold">
-                                <span>{mode === 'encrypt' ? 'CIPHERTEXT OUTPUT' : 'PLAINTEXT OUTPUT'}</span>
-                                <button onClick={copyOutput} className="border border-brand-cyan/20 text-slate-400 py-0.5 px-2.5 rounded hover:border-brand-cyan hover:text-brand-cyan transition-colors">
-                                    COPY
-                                </button>
-                            </div>
-                            <div className={`w-full min-h-[70px] p-3 text-sm break-all rounded bg-slate-950/80 border ${hasError ? 'border-red-500/50 text-red-400' : 'border-brand-cyan/20 text-green-400'}`}>
-                                {outputText}
-                            </div>
-                        </div>
-
-                    </div>
-
-                    {/* Status Bar */}
-                    <div className="flex items-center gap-6 px-5 py-2 text-[0.65rem] text-slate-400 bg-slate-950/60 border-t border-brand-cyan/20 tracking-wider">
-                        <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            SECURE
-                        </div>
-                        <span>INPUT: {inputText.length} CHARS</span>
-                        <span>OUTPUT: {outputText === '_' ? 0 : outputText.length} CHARS</span>
-                    </div>
-                </div>
-            );
-        };
-
         const Projects = () => {
             return (
                 <section id="projects" className="py-24 relative">
@@ -738,39 +509,43 @@
                             <h2 className="text-3xl font-bold">Featured Projects & Tools</h2>
                         </motion.div>
 
-                        <div className="grid lg:grid-cols-5 gap-8">
+                        <div className="grid md:grid-cols-2 gap-8">
                             
-                            {/* Live Interactive Cipher Terminal replaces the Food Order Project */}
+                            {/* Link to external Cipher Terminal Page */}
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
-                                className="lg:col-span-3 flex flex-col"
+                                className="h-full"
                             >
-                                <div className="mb-4">
-                                    <span className="text-xs font-medium text-brand-blue tracking-wider uppercase">Live Cyber Tool</span>
-                                    <h3 className="text-2xl font-bold text-white mt-1">Interactive Cipher Terminal</h3>
-                                    <p className="text-slate-400 mt-2 mb-4 text-sm leading-relaxed">
-                                        A fully functional, client-side encryption and decryption tool engineered using React. Built to securely encode and transform data on the fly using various cryptographic algorithms. Try it out below!
+                                <HoverCard className="p-8 h-full flex flex-col group">
+                                    <div className="mb-4">
+                                        <span className="text-xs font-medium text-brand-blue tracking-wider uppercase">Live Cyber Tool</span>
+                                        <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-brand-cyan transition-colors">Cyber Security Labs</h3>
+                                    </div>
+                                    <p className="text-slate-400 mb-8 flex-grow leading-relaxed text-sm">
+                                        A fully functional, client-side encryption and decryption tool engineered using React. Built to securely encode and transform data on the fly using various cryptographic algorithms including Base64, Hex, ROT-13, and XOR.
                                     </p>
-                                </div>
-                                <div className="flex-grow flex items-center justify-center">
-                                    <CipherTerminal />
-                                </div>
+                                    <div className="mt-auto pt-6 border-t border-slate-800/50">
+                                        <a href="cipher-terminal.html" target="_blank" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-brand-blue/10 text-brand-blue font-bold tracking-wider text-sm hover:bg-brand-blue hover:text-slate-950 transition-all border border-brand-blue/30 w-full group-hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                                            OPEN TERMINAL <Icons.ArrowRight />
+                                        </a>
+                                    </div>
+                                </HoverCard>
                             </motion.div>
 
-                            {/* Standard Project Card for Cyber Labs */}
+                            {/* Standard Project Card for Offensive Security */}
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ delay: 0.1 }}
-                                className="lg:col-span-2"
+                                className="h-full"
                             >
                                 <HoverCard className="p-8 h-full flex flex-col group">
                                     <div className="mb-4">
                                         <span className="text-xs font-medium text-brand-blue tracking-wider uppercase">Self-Initiated VAPT</span>
-                                        <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-brand-cyan transition-colors">Cyber Security Labs</h3>
+                                        <h3 className="text-2xl font-bold text-white mt-1 group-hover:text-brand-cyan transition-colors">Offensive Security Practice</h3>
                                     </div>
                                     <p className="text-slate-400 mb-8 flex-grow leading-relaxed text-sm">
                                         Actively practicing VAPT concepts using structured online labs. Performing information gathering, basic scanning, and controlled vulnerability exploitation to deepen practical security knowledge. Developed strong familiarity with offensive tools and defensive triage methodologies.
