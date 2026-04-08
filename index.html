@@ -453,6 +453,15 @@
 
                         <div className="space-y-0">
                             <TimelineItem 
+                                icon={<Icons.Shield />}
+                                title="Advanced Diploma in Cyber Defense (ADCD)" 
+                                subtitle="RedTeam Hacker Academy" 
+                                date="Present"
+                            >
+                                <p>Currently enrolled in an intensive program to master modern threat mitigation and defensive strategies. Gaining hands-on expertise in network security, incident response, and advanced threat intelligence. Actively participating in real-world simulations to fortify enterprise-level security architectures.</p>
+                            </TimelineItem>
+
+                            <TimelineItem 
                                 icon={<Icons.GraduationCap />}
                                 title="Bachelor of Computer Applications" 
                                 subtitle="Vijaya College Jayanagar" 
@@ -516,11 +525,37 @@
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                             
-                            {/* Link to internal Cipher Terminal Page via State */}
+                            {/* Standard Project Card for Offensive Security (Moved to First) */}
                             <motion.div 
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
+                                className="h-full"
+                            >
+                                <HoverCard className="p-6 md:p-8 h-full flex flex-col group">
+                                    <div className="mb-4">
+                                        <span className="text-[0.65rem] md:text-xs font-medium text-brand-blue tracking-wider uppercase">Self-Initiated VAPT</span>
+                                        <h3 className="text-xl md:text-2xl font-bold text-white mt-1 group-hover:text-brand-cyan transition-colors">Offensive Security Practice</h3>
+                                    </div>
+                                    <p className="text-slate-400 mb-6 md:mb-8 flex-grow leading-relaxed text-sm">
+                                        Actively practicing VAPT concepts using structured online labs. Performing information gathering, basic scanning, and controlled vulnerability exploitation to deepen practical security knowledge. Developed strong familiarity with offensive tools and defensive triage methodologies.
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 mt-auto">
+                                        {["TryHackMe", "HackTheBox", "PortSwigger", "OverTheWire", "VulnHub"].map((t, i) => (
+                                            <span key={i} className="text-[0.7rem] md:text-xs px-2.5 py-1 bg-slate-950 rounded-full text-slate-300 font-mono border border-slate-800">
+                                                {t}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </HoverCard>
+                            </motion.div>
+
+                            {/* Link to internal Cipher Terminal Page via State (Moved to Second) */}
+                            <motion.div 
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.1 }}
                                 className="h-full"
                             >
                                 <HoverCard className="p-6 md:p-8 h-full flex flex-col group">
@@ -538,32 +573,6 @@
                                         >
                                             OPEN TERMINAL <Icons.ArrowRight />
                                         </button>
-                                    </div>
-                                </HoverCard>
-                            </motion.div>
-
-                            {/* Standard Project Card for Offensive Security */}
-                            <motion.div 
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.1 }}
-                                className="h-full"
-                            >
-                                <HoverCard className="p-6 md:p-8 h-full flex flex-col group">
-                                    <div className="mb-4">
-                                        <span className="text-[0.65rem] md:text-xs font-medium text-brand-blue tracking-wider uppercase">Self-Initiated VAPT</span>
-                                        <h3 className="text-xl md:text-2xl font-bold text-white mt-1 group-hover:text-brand-cyan transition-colors">Offensive Security Practice</h3>
-                                    </div>
-                                    <p className="text-slate-400 mb-6 md:mb-8 flex-grow leading-relaxed text-sm">
-                                        Actively practicing VAPT concepts using structured online labs. Performing information gathering, basic scanning, and controlled vulnerability exploitation to deepen practical security knowledge. Developed strong familiarity with offensive tools and defensive triage methodologies.
-                                    </p>
-                                    <div className="flex flex-wrap gap-2 mt-auto">
-                                        {["TryHackMe", "HackTheBox", "Nmap", "DVWA"].map((t, i) => (
-                                            <span key={i} className="text-[0.7rem] md:text-xs px-2.5 py-1 bg-slate-950 rounded-full text-slate-300 font-mono border border-slate-800">
-                                                {t}
-                                            </span>
-                                        ))}
                                     </div>
                                 </HoverCard>
                             </motion.div>
